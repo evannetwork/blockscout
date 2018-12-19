@@ -7,7 +7,7 @@ defmodule Explorer.Chain.Block do
 
   use Explorer.Schema
 
-  alias Explorer.Chain.{Address, Block.SecondDegreeRelation, Gas, Hash, Transaction}
+  alias Explorer.Chain.{Address, Block.SecondDegreeRelation, Block.Reward, Gas, Hash, Transaction}
 
   @required_attrs ~w(consensus difficulty gas_limit gas_used hash miner_hash nonce number parent_hash size timestamp
                      total_difficulty)a
@@ -95,6 +95,15 @@ defmodule Explorer.Chain.Block do
     |> validate_required(@required_attrs)
     |> foreign_key_constraint(:parent_hash)
     |> unique_constraint(:hash, name: :blocks_pkey)
+  end
+
+  def get_blocks_without_reward(query \\ __MODULE__) do
+    from(
+      b in query,
+      left_join: r in Reward,
+      on: [block_hash: b.hash],
+      where: is_nil(r.block_hash)
+    )
   end
 
   @doc """
