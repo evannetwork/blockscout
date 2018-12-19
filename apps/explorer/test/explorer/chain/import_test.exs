@@ -452,9 +452,9 @@ defmodule Explorer.Chain.ImportTest do
     end
 
     test "publishes data to subscribers on insert" do
-      Chain.subscribe_to_events(:logs)
+      Chain.subscribe_to_events(:addresses)
       Import.all(@import_data)
-      assert_received {:chain_event, :logs, :realtime, [%Log{}]}
+      assert_received {:chain_event, :addresses, :realtime, [%Log{}]}
     end
 
     test "with invalid data" do
@@ -485,12 +485,6 @@ defmodule Explorer.Chain.ImportTest do
                        [%{transaction_hash: _, index: _}, %{transaction_hash: _, index: _}]}
     end
 
-    test "publishes log data to subscribers on insert" do
-      Chain.subscribe_to_events(:logs)
-      Import.all(@import_data)
-      assert_received {:chain_event, :logs, :realtime, [%Log{}]}
-    end
-
     test "publishes transaction hashes data to subscribers on insert" do
       Chain.subscribe_to_events(:transactions)
       Import.all(@import_data)
@@ -508,9 +502,9 @@ defmodule Explorer.Chain.ImportTest do
     test "does not broadcast if broadcast option is false" do
       non_broadcast_data = Map.merge(@import_data, %{broadcast: false})
 
-      Chain.subscribe_to_events(:logs)
+      Chain.subscribe_to_events(:addresses)
       Import.all(non_broadcast_data)
-      refute_received {:chain_event, :logs, :realtime, [%Log{}]}
+      refute_received {:chain_event, :addresses, :realtime, [%Log{}]}
     end
 
     test "updates address with contract code" do

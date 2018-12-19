@@ -2798,9 +2798,9 @@ defmodule Explorer.ChainTest do
   end
 
   test "subscribe_to_events/1" do
-    assert :ok == Chain.subscribe_to_events(:logs)
+    assert :ok == Chain.subscribe_to_events(:addresses)
     current_pid = self()
-    assert [{^current_pid, _}] = Registry.lookup(Registry.ChainEvents, :logs)
+    assert [{^current_pid, _}] = Registry.lookup(Registry.ChainEvents, :addresses)
   end
 
   describe "token_from_address_hash/1" do
