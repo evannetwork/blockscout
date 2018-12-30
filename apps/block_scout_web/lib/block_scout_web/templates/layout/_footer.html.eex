@@ -15,7 +15,7 @@
       </a>
     </div>
 
-    <%= gettext "Copyright %{year} POA", year: 2018 %>
+    <%= gettext "Copyright %{year} evan.network", year: 2018 %>
 
   </div>
 </footer>

@@ -31,7 +31,6 @@ defmodule EthereumJSONRPC.Parity do
   @impl EthereumJSONRPC.Variant
   def fetch_internal_transactions(transactions_params, json_rpc_named_arguments) when is_list(transactions_params) do
     id_to_params = id_to_params(transactions_params)
-
     with {:ok, responses} <-
            id_to_params
            |> trace_replay_transaction_requests()

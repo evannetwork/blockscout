@@ -1,0 +1,15 @@
+version: '2'
+services:
+  postgres:
+    image: postgres:10.5-alpine
+    restart: always
+    environment:
+      # match PGPASSWORD for elixir image above
+      POSTGRES_PASSWORD: postgres
+      # match PGUSER for elixir image above
+      POSTGRES_USER: postgres
+
+  explorer:
+    image: poa-explorer
+    ports:
+     - '4000:4000'

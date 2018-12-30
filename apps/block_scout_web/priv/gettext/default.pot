@@ -336,7 +336,7 @@ msgstr ""
 
 #, elixir-format
 #: lib/block_scout_web/templates/layout/_footer.html.eex:18
-msgid "Copyright %{year} POA"
+msgid "Copyright %{year} evan.network"
 msgstr ""
 
 #, elixir-format
@@ -658,12 +658,12 @@ msgstr ""
 
 #, elixir-format
 #: lib/block_scout_web/templates/layout/_topnav.html.eex:107
-msgid "POA Core"
+msgid "evan.network testcore"
 msgstr ""
 
 #, elixir-format
 #: lib/block_scout_web/templates/layout/_topnav.html.eex:106
-msgid "POA Sokol"
+msgid "evan.network core"
 msgstr ""
 
 #, elixir-format

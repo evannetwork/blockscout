@@ -10,9 +10,9 @@ defmodule BlockScoutWeb.ExchangeRateChannel do
     {:ok, %{}, socket}
   end
 
-  def handle_out("new_rate", %{exchange_rate: exchange_rate, market_history_data: market_history_data}, socket) do
+  def handle_out("new_rate", %{market_history_data: market_history_data}, socket) do
     push(socket, "new_rate", %{
-      exchange_rate: exchange_rate,
+      exchange_rate: 1,
       market_history_data: market_history_data
     })
 

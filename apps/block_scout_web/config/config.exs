@@ -36,10 +36,7 @@ config :block_scout_web, BlockScoutWeb.Tracer,
 config :block_scout_web, BlockScoutWeb.Gettext, locales: ~w(en), default_locale: "en"
 
 config :block_scout_web, BlockScoutWeb.SocialMedia,
-  twitter: "PoaNetwork",
-  telegram: "oraclesnetwork",
-  facebook: "PoaNetwork",
-  instagram: "PoaNetwork"
+  twitter: "EVAN_ntwrk"
 
 config :ex_cldr,
   default_locale: "en",

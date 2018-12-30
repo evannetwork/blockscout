@@ -53,14 +53,14 @@ ifdef HAS_BLOCKSCOUT_IMAGE
 	@echo "==> Image exist. Using $(DOCKER_IMAGE)"
 else
 	@echo "==> No image found trying to build one..."
-	@docker build -f ./Dockerfile -t $(DOCKER_IMAGE) ../
+	@docker build --no-cache -f ./Dockerfile -t $(DOCKER_IMAGE) ../
 endif
 
 migrate: build postgres
 	@echo "==> Running migrations"
 	@docker run --rm \
 					$(BLOCKSCOUT_CONTAINNER_PARAMS) \
-					$(DOCKER_IMAGE) /bin/sh -c "echo $$MIX_ENV && mix do ecto.drop --force, ecto.create, ecto.migrate"
+					$(DOCKER_IMAGE) sh -c "echo $$MIX_ENV && mix do ecto.drop --force, ecto.create, ecto.migrate"
 
 
 PG_EXIST := $(shell docker ps -a | grep ${PG_CONTAINER_NAME})
@@ -76,6 +76,7 @@ else
 endif
 else
 	@echo "==> Creating new PostgreSQL container"
+	@echo "docker run -d --name $(PG_CONTAINER_NAME) -e POSTGRES_PASSWORD=\"\" -e POSTGRES_USER=\"postgres\" -p 5432:5432 $(PG_CONTAINER_IMAGE)"
 	@docker run -d --name $(PG_CONTAINER_NAME) \
 					-e POSTGRES_PASSWORD="" \
 					-e POSTGRES_USER="postgres" \
@@ -87,10 +88,10 @@ endif
 
 start: build postgres 
 	@echo "==> Starting blockscout"
-	@docker run --rm \
+	@docker run -d --name blockscout \
 					$(BLOCKSCOUT_CONTAINNER_PARAMS) \
 					-p 4000:4000 \
-					$(DOCKER_IMAGE) /bin/sh -c "mix phx.server"
+					$(DOCKER_IMAGE) sh -c "mix phx.server"
 
 run: start
 
