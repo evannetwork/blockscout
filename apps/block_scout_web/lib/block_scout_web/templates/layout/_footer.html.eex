@@ -1,18 +1,38 @@
 <footer class="footer">
   <div class="footer-body container">
-    <%= link to: chain_path(@conn, :show), class: "footer-brand" do %>
-      <img class="footer-logo" src="<%= logo() %>" />
-    <% end %>
-    <div class="icon-links icon-links-primary">
-      <a href="https://github.com/evannetwork" target="_blank" class="icon-link" data-toggle="tooltip" data-placement="top" title="<%= gettext("Github") %>">
-        <i class="fab fa-github"></i>
-      </a>
-      <a href="https://twitter.com/EVAN_ntwrk" target="_blank" class="icon-link" data-toggle="tooltip" data-placement="top" title="<%= gettext("Twitter") %>">
-        <i class="fab fa-twitter"></i>
-      </a>
+    <div class="row">
+      <div class="col-md-4">
+        <%= link to: chain_path(@conn, :show), class: "footer-brand" do %>
+          <img class="footer-logo" src="<%= logo() %>" alt="<%= subnetwork_title() %>" />
+        <% end %>
+      </div>
+      <div class="col-md-5">
+      </div>
+
+      <div class="col-md-3">
+        <div class="icon-links icon-links-primary footer-social-icons">
+          <a href="https://github.com/evannetwork" rel="noreferrer" target="_blank" class="icon-link" data-toggle="tooltip" data-placement="top" title="<%= gettext("Github") %>">
+            <i class="fab fa-github"></i>
+          </a>
+          <a href="https://www.twitter.com/EVAN_ntwrk/" rel="noreferrer" target="_blank" class="icon-link" data-toggle="tooltip" data-placement="top" title="<%= gettext("Twitter") %>">
+            <i class="fab fa-twitter"></i>
+          </a>
+        </div>
+      </div>
     </div>
 
-    <%= gettext "Copyright %{year} evan.network", year: 2018 %>
+    <div class="row footer-info">
+      <div class="col-12">
+        <%= gettext("Blockscout is a tool for inspecting and analyzing EVM based blockchains. Blockchain explorer for Ethereum Networks.") %>
+      </div>
+    </div>
 
+    <% version = version() %>
+
+    <%= unless ignore_version?(version) do %>
+      <div>
+        <%= gettext("Version") %>: <%= version %>
+      </div>
+    <% end %>
   </div>
 </footer>

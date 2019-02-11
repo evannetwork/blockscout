@@ -11,9 +11,9 @@ config :explorer,
   coin: "USDT",
   token_functions_reader_max_retries: 3
 
-config :explorer, Explorer.Counters.AddressesWithBalanceCounter, enabled: true, enable_consolidation: true
+config :explorer, Explorer.Counters.AverageBlockTime, enabled: true
 
-config :explorer, Explorer.Counters.TokenHoldersCounter, enabled: true, enable_consolidation: true
+config :explorer, Explorer.Counters.AddressesWithBalanceCounter, enabled: true, enable_consolidation: true
 
 config :explorer, Explorer.ExchangeRates, enabled: true, store: :ets
 
@@ -40,8 +40,8 @@ else
   config :explorer, Explorer.Validator.MetadataProcessor, enabled: false
 end
 
-if System.get_env("SUPPLY_MODULE") == "TransactionAndLog" do
-  config :explorer, supply: Explorer.Chain.Supply.TransactionAndLog
+if System.get_env("SUPPLY_MODULE") == "TokenBridge" do
+  config :explorer, supply: Explorer.Chain.Supply.TokenBridge
 end
 
 if System.get_env("SOURCE_MODULE") == "TransactionAndLog" do

@@ -6,13 +6,19 @@ defmodule Explorer.Application do
   use Application
 
   alias Explorer.Admin
+  alias Explorer.Chain.BlockNumberCache
   alias Explorer.Repo.PrometheusLogger
 
   @impl Application
   def start(_type, _args) do
     PrometheusLogger.setup()
 
-    Telemetry.attach("prometheus-ecto", [:explorer, :repo, :query], Explorer.Repo.PrometheusLogger, :handle_event, %{})
+    :telemetry.attach(
+      "prometheus-ecto",
+      [:explorer, :repo, :query],
+      &PrometheusLogger.handle_event/4,
+      %{}
+    )
 
     # Children to start in all environments
     base_children = [
@@ -28,7 +34,11 @@ defmodule Explorer.Application do
 
     opts = [strategy: :one_for_one, name: Explorer.Supervisor]
 
-    Supervisor.start_link(children, opts)
+    res = Supervisor.start_link(children, opts)
+
+    BlockNumberCache.setup()
+
+    res
   end
 
   defp configurable_children do
@@ -36,8 +46,8 @@ defmodule Explorer.Application do
       configure(Explorer.ExchangeRates),
       configure(Explorer.KnownTokens),
       configure(Explorer.Market.History.Cataloger),
-      configure(Explorer.Counters.TokenHoldersCounter),
       configure(Explorer.Counters.AddressesWithBalanceCounter),
+      configure(Explorer.Counters.AverageBlockTime),
       configure(Explorer.Validator.MetadataProcessor)
     ]
     |> List.flatten()
