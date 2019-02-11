@@ -15,7 +15,7 @@ ADD apps/explorer/mix.exs ./apps/explorer/
 ADD apps/ethereum_jsonrpc/mix.exs ./apps/ethereum_jsonrpc/
 ADD apps/indexer/mix.exs ./apps/indexer/
 
-RUN mix do deps.get, deps.compile
+RUN HEX_HTTP_CONCURRENCY=3 HEX_HTTP_TIMEOUT=120 mix do deps.get, deps.compile
 
 ADD . .
 
