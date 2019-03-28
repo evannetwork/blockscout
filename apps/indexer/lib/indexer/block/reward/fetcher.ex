@@ -18,6 +18,7 @@ defmodule Indexer.Block.Reward.Fetcher do
   alias Explorer.Chain.{Block, Wei}
   alias Indexer.Address.CoinBalances
   alias Indexer.{AddressExtraction, BufferedTask, CoinBalance, Tracer}
+  alias Indexer.Block.Reward.Supervisor, as: BlockRewardSupervisor
 
   @behaviour BufferedTask
 
@@ -34,7 +35,11 @@ defmodule Indexer.Block.Reward.Fetcher do
   """
   @spec async_fetch([Block.block_number()]) :: :ok
   def async_fetch(block_numbers) when is_list(block_numbers) do
-    BufferedTask.buffer(__MODULE__, block_numbers)
+    if BlockRewardSupervisor.disabled?() do
+      :ok
+    else
+      BufferedTask.buffer(__MODULE__, block_numbers)
+    end
   end
 
   @doc false
@@ -171,22 +176,64 @@ defmodule Indexer.Block.Reward.Fetcher do
   end
 
   defp add_gas_payments(beneficiaries_params) do
+    beneficiaries_params
+    |> add_validator_rewards()
+    |> reduce_uncle_rewards()
+  end
+
+  defp add_validator_rewards(beneficiaries_params) do
     gas_payment_by_block_hash =
       beneficiaries_params
       |> Stream.filter(&(&1.address_type == :validator))
       |> Enum.map(& &1.block_hash)
       |> Chain.gas_payment_by_block_hash()
 
-    Enum.map(beneficiaries_params, fn %{block_hash: block_hash} = beneficiary ->
-      case gas_payment_by_block_hash do
-        %{^block_hash => gas_payment} ->
-          {:ok, minted} = Wei.cast(beneficiary.reward)
-          %{beneficiary | reward: Wei.sum(minted, gas_payment)}
+    Enum.map(beneficiaries_params, fn %{block_hash: block_hash, address_type: address_type} = beneficiary ->
+      if address_type == :validator do
+        case gas_payment_by_block_hash do
+          %{^block_hash => gas_payment} ->
+            {:ok, minted} = Wei.cast(beneficiary.reward)
+            %{beneficiary | reward: Wei.sum(minted, gas_payment)}
 
-        _ ->
-          beneficiary
+          _ ->
+            beneficiary
+        end
+      else
+        beneficiary
       end
     end)
+  end
+
+  def reduce_uncle_rewards(beneficiaries_params) do
+    beneficiaries_params
+    |> Enum.reduce([], fn %{address_type: address_type} = beneficiary, acc ->
+      current =
+        if address_type == :uncle do
+          reward =
+            Enum.reduce(beneficiaries_params, %Wei{value: 0}, fn %{
+                                                                   address_type: address_type,
+                                                                   address_hash: address_hash,
+                                                                   block_hash: block_hash
+                                                                 } = current_beneficiary,
+                                                                 reward_acc ->
+              if address_type == beneficiary.address_type && address_hash == beneficiary.address_hash &&
+                   block_hash == beneficiary.block_hash do
+                {:ok, minted} = Wei.cast(current_beneficiary.reward)
+
+                Wei.sum(reward_acc, minted)
+              else
+                reward_acc
+              end
+            end)
+
+          %{beneficiary | reward: reward}
+        else
+          beneficiary
+        end
+
+      [current | acc]
+    end)
+    |> Enum.uniq()
   end
 
   defp import_block_reward_params(block_rewards_params) when is_list(block_rewards_params) do

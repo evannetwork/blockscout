@@ -50,6 +50,29 @@ defmodule Indexer.InternalTransaction.Fetcher do
     BufferedTask.buffer(__MODULE__, entries, timeout)
   end
 
+  @doc """
+  Asynchronously fetches internal transactions.
+
+  ## Limiting Upstream Load
+
+  Internal transactions are an expensive upstream operation. The number of
+  results to fetch is configured by `@max_batch_size` and represents the number
+  of transaction hashes to request internal transactions in a single JSONRPC
+  request. Defaults to `#{@max_batch_size}`.
+
+  The `@max_concurrency` attribute configures the  number of concurrent requests
+  of `@max_batch_size` to allow against the JSONRPC. Defaults to `#{@max_concurrency}`.
+
+  *Note*: The internal transactions for individual transactions cannot be paginated,
+  so the total number of internal transactions that could be produced is unknown.
+  """
+  @spec async_block_fetch([%{required(:block_number) => Block.block_number()}]) :: :ok
+  def async_block_fetch(transactions_fields, timeout \\ 5000) when is_list(transactions_fields) do
+    entries = Enum.map(transactions_fields, &block_entry/1)
+
+    BufferedTask.buffer(__MODULE__, entries, timeout)
+  end
+
   @doc false
   def child_spec([init_options, gen_server_options]) do
     {state, mergeable_init_options} = Keyword.pop(init_options, :json_rpc_named_arguments)
@@ -69,17 +92,31 @@ defmodule Indexer.InternalTransaction.Fetcher do
   end
 
   @impl BufferedTask
-  def init(initial, reducer, _) do
+  def init(initial, reducer, json_rpc_named_arguments) do
     {:ok, final} =
-      Chain.stream_transactions_with_unfetched_internal_transactions(
-        [:block_number, :hash, :index],
-        initial,
-        fn transaction_fields, acc ->
-          transaction_fields
-          |> entry()
-          |> reducer.(acc)
-        end
-      )
+      case Keyword.fetch!(json_rpc_named_arguments, :variant) do
+        EthereumJSONRPC.Parity ->
+          Chain.stream_blocks_with_unfetched_internal_transactions(
+            [:number],
+            initial,
+            fn block_fields, acc ->
+              block_fields
+              |> block_entry()
+              |> reducer.(acc)
+            end
+          )
+
+        _ ->
+          Chain.stream_transactions_with_unfetched_internal_transactions(
+            [:block_number, :hash, :index],
+            initial,
+            fn transaction_fields, acc ->
+              transaction_fields
+              |> entry()
+              |> reducer.(acc)
+            end
+          )
+      end
 
     final
   end
@@ -93,6 +130,14 @@ defmodule Indexer.InternalTransaction.Fetcher do
     %{block_number: block_number, hash_data: to_string(hash), transaction_index: index}
   end
 
+  defp block_entry(%{number: block_number}) when is_integer(block_number) do
+    block_number
+  end
+
+  defp block_params(block_number) when is_integer(block_number) do
+    %{number: block_number}
+  end
+
   @impl BufferedTask
   @decorate trace(
               name: "fetch",
@@ -101,19 +146,40 @@ defmodule Indexer.InternalTransaction.Fetcher do
               tracer: Tracer
             )
   def run(entries, json_rpc_named_arguments) do
-    unique_entries = unique_entries(entries)
+    variant = Keyword.fetch!(json_rpc_named_arguments, :variant)
+
+    unique_entries = unique_entries(entries, variant)
+
+    internal_transactions_indexed_at_blocks =
+      case variant do
+        EthereumJSONRPC.Parity -> Enum.map(unique_entries, &block_params/1)
+        _ -> []
+      end
 
     unique_entries_count = Enum.count(unique_entries)
     Logger.metadata(count: unique_entries_count)
 
     Logger.debug("fetching internal transactions for transactions")
 
-    unique_entries
-    |> Enum.map(&params/1)
-    |> EthereumJSONRPC.fetch_internal_transactions(json_rpc_named_arguments)
+    variant
+    |> case do
+      EthereumJSONRPC.Parity ->
+        unique_entries
+        |> EthereumJSONRPC.fetch_block_internal_transactions(json_rpc_named_arguments)
+
+      _ ->
+        unique_entries
+        |> Enum.map(&params/1)
+        |> EthereumJSONRPC.fetch_internal_transactions(json_rpc_named_arguments)
+    end
     |> case do
       {:ok, internal_transactions_params} ->
-        addresses_params = AddressExtraction.extract_addresses(%{internal_transactions: internal_transactions_params})
+        internal_transactions_params_without_failed_creations = remove_failed_creations(internal_transactions_params)
+
+        addresses_params =
+          AddressExtraction.extract_addresses(%{
+            internal_transactions: internal_transactions_params_without_failed_creations
+          })
 
         address_hash_to_block_number =
           Enum.into(addresses_params, %{}, fn %{fetched_coin_balance_block_number: block_number, hash: hash} ->
@@ -123,7 +189,11 @@ defmodule Indexer.InternalTransaction.Fetcher do
         with {:ok, imported} <-
                Chain.import(%{
                  addresses: %{params: addresses_params},
-                 internal_transactions: %{params: internal_transactions_params},
+                 internal_transactions: %{params: internal_transactions_params_without_failed_creations},
+                 internal_transactions_indexed_at_blocks: %{
+                   params: internal_transactions_indexed_at_blocks,
+                   with: :number_only_changeset
+                 },
                  timeout: :infinity
                }) do
           async_import_coin_balances(imported, %{
@@ -159,8 +229,10 @@ defmodule Indexer.InternalTransaction.Fetcher do
     end
   end
 
+  defp unique_entries(entries, EthereumJSONRPC.Parity), do: Enum.uniq(entries)
+
   # Protection and improved reporting for https://github.com/poanetwork/blockscout/issues/289
-  defp unique_entries(entries) do
+  defp unique_entries(entries, _) do
     entries_by_hash_bytes = Enum.group_by(entries, &elem(&1, 1))
 
     if map_size(entries_by_hash_bytes) < length(entries) do
@@ -194,6 +266,33 @@ defmodule Indexer.InternalTransaction.Fetcher do
 
         [unique | _] = duplicates ->
           {[unique | acc_uniques], duplicates ++ acc_duplicates}
+      end
+    end)
+  end
+
+  defp remove_failed_creations(internal_transactions_params) do
+    internal_transactions_params
+    |> Enum.map(fn internal_transaction_params ->
+      internal_transaction_params[:trace_address]
+
+      failed_parent_index =
+        Enum.find(internal_transaction_params[:trace_address], fn trace_address ->
+          parent = Enum.at(internal_transactions_params, trace_address)
+
+          !is_nil(parent[:error])
+        end)
+
+      failed_parent = failed_parent_index && Enum.at(internal_transactions_params, failed_parent_index)
+
+      if failed_parent do
+        internal_transaction_params
+        |> Map.delete(:created_contract_address_hash)
+        |> Map.delete(:created_contract_code)
+        |> Map.delete(:gas_used)
+        |> Map.delete(:output)
+        |> Map.put(:error, failed_parent[:error])
+      else
+        internal_transaction_params
       end
     end)
   end
