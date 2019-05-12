@@ -52,6 +52,9 @@ Currently available block explorers (i.e. Etherscan and Etherchain) are closed s
 * [Goerli Testnet](https://blockscout.com/eth/goerli)
 * [Rinkeby Testnet](https://blockscout.com/eth/rinkeby)
 * [Ethereum Classic](https://blockscout.com/etc/mainnet)
+* [Aerum](https://blockscout.com/aerum/mainnet)
+* [Callisto](https://blockscout.com/callisto/mainnet)
+* [RSK](https://blockscout.com/rsk/mainnet)
 
 #### Additional Chains Utilizing BlockScout
 
@@ -61,6 +64,8 @@ Currently available block explorers (i.e. Etherscan and Etherchain) are closed s
 * [SafeChain](https://explorer.safechain.io)
 * [SpringChain](https://explorer.springrole.com/)
 * [PIRL](http://pirl.es/)
+* [Petrichor](https://explorer.petrichor-dev.com/)
+* [Ether-1](https://blocks.ether1.wattpool.net/)
 
 
 ### Visual Interface
@@ -119,7 +124,7 @@ The [development stack page](https://github.com/poanetwork/blockscout/wiki/Devel
   `cd apps/explorer && npm install; cd -`
 
   7. Update your JSON RPC Variant in `apps/explorer/config/dev.exs` and `apps/indexer/config/dev.exs`.
-  For `variant`, enter `ganache`, `geth`, or `parity`
+  For `variant`, enter `ganache`, `geth`, `parity`, or `rsk`
 
   8. Update your JSON RPC Endpoint in `apps/explorer/config/dev/` and `apps/indexer/config/dev/`
   For the `variant` chosen in step 7, enter the correct information for the corresponding JSON RPC Endpoint in `parity.exs`, `geth.exs`, or `ganache.exs`
@@ -135,7 +140,7 @@ The [development stack page](https://github.com/poanetwork/blockscout/wiki/Devel
       ```
       * If using Chrome, Enable `chrome://flags/#allow-insecure-localhost`.
 
-  9. Start Phoenix Server.
+  9. Run the Phoenix Server from the root directory of your application.
   `mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.

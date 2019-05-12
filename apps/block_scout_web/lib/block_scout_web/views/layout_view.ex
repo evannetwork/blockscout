@@ -15,6 +15,11 @@ defmodule BlockScoutWeb.LayoutView do
     Keyword.get(application_config(), :logo) || "/images/evan_logo.png"
   end
 
+  def logo_footer do
+    Keyword.get(application_config(), :logo_footer) || Keyword.get(application_config(), :logo) ||
+      "/images/blockscout_logo.svg"
+  end
+
   def subnetwork_title do
     Keyword.get(application_config(), :subnetwork) || "Sokol Testnet"
   end
@@ -95,14 +100,24 @@ defmodule BlockScoutWeb.LayoutView do
     |> Enum.reject(fn %{title: title} ->
       title == subnetwork_title()
     end)
+    |> Enum.sort()
   end
 
   def main_nets do
     Enum.reject(other_networks(), &Map.get(&1, :test_net?))
   end
 
+  def head_main_nets do
+    main_nets()
+    |> Enum.reject(&Map.get(&1, :other?))
+  end
+
   def test_nets do
     Enum.filter(other_networks(), &Map.get(&1, :test_net?))
+  end
+
+  def other_nets do
+    Enum.filter(other_networks(), &Map.get(&1, :other?))
   end
 
   def other_explorers do

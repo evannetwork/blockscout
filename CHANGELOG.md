@@ -1,10 +1,119 @@
 ## Current
 
 ### Features
+- [#1925](https://github.com/poanetwork/blockscout/pull/1925) - added dai theme and logo
+- [#1922](https://github.com/poanetwork/blockscout/pull/1922) - added ethereum classic theme and logo
+- [#1907](https://github.com/poanetwork/blockscout/pull/1907) - dropdown color bug fix (lukso theme) and tooltip color bug fix
+- [#1903](https://github.com/poanetwork/blockscout/pull/1903) - added rsk theme and rsk logo
+- [#1895](https://github.com/poanetwork/blockscout/pull/1895) - add changes to poa theme and poa logo
+- [#1812](https://github.com/poanetwork/blockscout/pull/1812) - add pagination to addresses page
+- [#1874](https://github.com/poanetwork/blockscout/pull/1874) - add changes to ethereum theme and ethereum logo
+- [#1815](https://github.com/poanetwork/blockscout/pull/1815) - able to search without prefix "0x"
+- [#1813](https://github.com/poanetwork/blockscout/pull/1813) - add total blocks counter to the main page
+- [#1806](https://github.com/poanetwork/blockscout/pull/1806) - verify contracts with a post request
+- [#1857](https://github.com/poanetwork/blockscout/pull/1857) - Re-implement Geth JS internal transaction tracer in Elixir
+- [#1859](https://github.com/poanetwork/blockscout/pull/1859) - feat: show raw transaction traces
+- [#1920](https://github.com/poanetwork/blockscout/pull/1920) - fix: remove source code fields from list endpoint
+- [#1876](https://github.com/poanetwork/blockscout/pull/1876) - async calculate a count of blocks
 
 ### Fixes
 
+- [#1926](https://github.com/poanetwork/blockscout/pull/1926) - status label alignment
+- [#1829](https://github.com/poanetwork/blockscout/pull/1829) - Handle nil quantities in block decoding routine
+- [#1830](https://github.com/poanetwork/blockscout/pull/1830) - Make block size field nullable
+- [#1840](https://github.com/poanetwork/blockscout/pull/1840) - Handle case when total supply is nil
+- [#1838](https://github.com/poanetwork/blockscout/pull/1838) - Block counter calculates only consensus blocks
+- [#1849](https://github.com/poanetwork/blockscout/pull/1849) - Improve chains menu
+- [#1869](https://github.com/poanetwork/blockscout/pull/1869) - Fix output and gas extraction in JS tracer for Geth
+- [#1868](https://github.com/poanetwork/blockscout/pull/1868) - fix: logs list endpoint performance
+- [#1822](https://github.com/poanetwork/blockscout/pull/1822) - Fix style breaks in decompiled contract code view
+- [#1885](https://github.com/poanetwork/blockscout/pull/1885) - highlight reserved words in decompiled code
+- [#1896](https://github.com/poanetwork/blockscout/pull/1896) - re-query tokens in top nav automplete
+- [#1881](https://github.com/poanetwork/blockscout/pull/1881) - fix: store solc versions locally for performance
+- [#1905](https://github.com/poanetwork/blockscout/pull/1905) - fix reorgs, uncles pagination
+- [#1875](https://github.com/poanetwork/blockscout/pull/1875) - fix: resolve false positive constructor arguments
+- [#1904](https://github.com/poanetwork/blockscout/pull/1904) - fix `BLOCK_COUNT_CACHE_TTL` env var type
+- [#1898](https://github.com/poanetwork/blockscout/pull/1898) - check if the constructor has arguments before verifying constructor arguments
+- [#1915](https://github.com/poanetwork/blockscout/pull/1915) - fallback to 2 latest evm versions
+
 ### Chore
+
+- [#1814](https://github.com/poanetwork/blockscout/pull/1814) - Clear build artefacts script
+- [#1837](https://github.com/poanetwork/blockscout/pull/1837) - Add -f flag to clear_build.sh script delete static folder
+- [#1892](https://github.com/poanetwork/blockscout/pull/1892) - Remove temporary worker modules
+
+## 1.3.10-beta
+
+### Features
+
+- [#1807](https://github.com/poanetwork/blockscout/pull/1807) - New theming capabilites.
+- [#1739](https://github.com/poanetwork/blockscout/pull/1739) - highlight decompiled source code
+- [#1696](https://github.com/poanetwork/blockscout/pull/1696) - full-text search by tokens
+- [#1742](https://github.com/poanetwork/blockscout/pull/1742) - Support RSK
+- [#1777](https://github.com/poanetwork/blockscout/pull/1777) - show ERC-20 token transfer info on transaction page
+- [#1770](https://github.com/poanetwork/blockscout/pull/1770) - set a websocket keepalive from config
+- [#1789](https://github.com/poanetwork/blockscout/pull/1789) - add ERC-721 info to transaction overview page
+- [#1801](https://github.com/poanetwork/blockscout/pull/1801) - Staking pools fetching
+
+### Fixes
+
+ - [#1724](https://github.com/poanetwork/blockscout/pull/1724) - Remove internal tx and token balance fetching from realtime fetcher
+ - [#1727](https://github.com/poanetwork/blockscout/pull/1727) - add logs pagination in rpc api
+ - [#1740](https://github.com/poanetwork/blockscout/pull/1740) - fix empty block time
+ - [#1743](https://github.com/poanetwork/blockscout/pull/1743) - sort decompiled smart contracts in lexicographical order
+ - [#1756](https://github.com/poanetwork/blockscout/pull/1756) - add today's token balance from the previous value
+ - [#1769](https://github.com/poanetwork/blockscout/pull/1769) - add timestamp to block overview
+ - [#1768](https://github.com/poanetwork/blockscout/pull/1768) - fix first block parameter
+ - [#1778](https://github.com/poanetwork/blockscout/pull/1778) - Make websocket optional for realtime fetcher
+ - [#1790](https://github.com/poanetwork/blockscout/pull/1790) - fix constructor arguments verification
+ - [#1793](https://github.com/poanetwork/blockscout/pull/1793) - fix top nav autocomplete
+ - [#1795](https://github.com/poanetwork/blockscout/pull/1795) - fix line numbers for decompiled contracts
+ - [#1803](https://github.com/poanetwork/blockscout/pull/1803) - use coinmarketcap for total_supply by default
+ - [#1802](https://github.com/poanetwork/blockscout/pull/1802) - make coinmarketcap's number of pages configurable
+ - [#1799](https://github.com/poanetwork/blockscout/pull/1799) - Use eth_getUncleByBlockHashAndIndex for uncle block fetching
+ - [#1531](https://github.com/poanetwork/blockscout/pull/1531) - docker: fix dockerFile for secp256k1 building
+ - [#1835](https://github.com/poanetwork/blockscout/pull/1835) - fix: ignore `pong` messages without error
+
+### Chore
+
+ - [#1804](https://github.com/poanetwork/blockscout/pull/1804) - (Chore) Divide chains by Mainnet/Testnet in menu
+ - [#1783](https://github.com/poanetwork/blockscout/pull/1783) - Update README with the chains that use Blockscout
+ - [#1780](https://github.com/poanetwork/blockscout/pull/1780) - Update link to the Github repo in the footer
+ - [#1757](https://github.com/poanetwork/blockscout/pull/1757) - Change twitter acc link to official Blockscout acc twitter
+ - [#1749](https://github.com/poanetwork/blockscout/pull/1749) - Replace the link in the footer with the official POA announcements tg channel link
+ - [#1718](https://github.com/poanetwork/blockscout/pull/1718) - Flatten indexer module hierarchy and supervisor tree
+ - [#1753](https://github.com/poanetwork/blockscout/pull/1753) - Add a check mark to decompiled contract tab
+ - [#1744](https://github.com/poanetwork/blockscout/pull/1744) - remove `0x0..0` from tests
+ - [#1763](https://github.com/poanetwork/blockscout/pull/1763) - Describe indexer structure and list existing fetchers
+ - [#1800](https://github.com/poanetwork/blockscout/pull/1800) - Disable lazy logging check in Credo
+
+
+## 1.3.9-beta
+
+### Features
+
+ - [#1662](https://github.com/poanetwork/blockscout/pull/1662) - allow specifying number of optimization runs
+ - [#1654](https://github.com/poanetwork/blockscout/pull/1654) - add decompiled code tab
+ - [#1661](https://github.com/poanetwork/blockscout/pull/1661) - try to compile smart contract with the latest evm version
+ - [#1665](https://github.com/poanetwork/blockscout/pull/1665) - Add contract verification RPC endpoint.
+ - [#1706](https://github.com/poanetwork/blockscout/pull/1706) - allow setting update interval for addresses with b
+
+### Fixes
+
+ - [#1669](https://github.com/poanetwork/blockscout/pull/1669) - do not fail if multiple matching tokens are found
+ - [#1691](https://github.com/poanetwork/blockscout/pull/1691) - decrease token metadata update interval
+ - [#1688](https://github.com/poanetwork/blockscout/pull/1688) - do not fail if failure reason is atom
+ - [#1692](https://github.com/poanetwork/blockscout/pull/1692) - exclude decompiled smart contract from encoding
+ - [#1684](https://github.com/poanetwork/blockscout/pull/1684) - Discard child block with parent_hash not matching hash of imported block
+ - [#1699](https://github.com/poanetwork/blockscout/pull/1699) - use seconds as transaction cache period measure
+ - [#1697](https://github.com/poanetwork/blockscout/pull/1697) - fix failing in rpc if balance is empty
+ - [#1711](https://github.com/poanetwork/blockscout/pull/1711) - rescue failing repo in block number cache update
+ - [#1712](https://github.com/poanetwork/blockscout/pull/1712) - do not set contract code from transaction input
+ - [#1714](https://github.com/poanetwork/blockscout/pull/1714) - fix average block time calculation
+
+### Chore
+
+ - [#1693](https://github.com/poanetwork/blockscout/pull/1693) - Add a checklist to the PR template
 
 
 ## 1.3.8-beta
@@ -14,7 +123,6 @@
  - [#1611](https://github.com/poanetwork/blockscout/pull/1611) - allow setting the first indexing block
  - [#1596](https://github.com/poanetwork/blockscout/pull/1596) - add endpoint to create decompiled contracts
  - [#1634](https://github.com/poanetwork/blockscout/pull/1634) - add transaction count cache
-
 
 ### Fixes
 

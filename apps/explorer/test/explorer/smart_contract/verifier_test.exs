@@ -82,29 +82,39 @@ defmodule Explorer.SmartContract.VerifierTest do
       assert abi != nil
     end
 
-    test "returns error when constructor arguments do not match", %{
-      contract_code_info: contract_code_info
-    } do
-      contract_address = insert(:contract_address, contract_code: contract_code_info.bytecode)
+    test "tries to compile with the latest evm version if wrong evm version was provided" do
+      bytecode =
+        "0x60606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063256fec88146100545780633fa4f245146100a9578063812600df146100d2575b600080fd5b341561005f57600080fd5b6100676100f5565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34156100b457600080fd5b6100bc61011b565b6040518082815260200191505060405180910390f35b34156100dd57600080fd5b6100f36004808035906020019091905050610121565b005b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60005481565b806000540160008190555033600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505b505600a165627a7a72305820b81379d1ae9d8e0fde05ee02b8bd170f43f8bd3d54da8b7ec203434a23a298980029"
 
-      constructor_arguments = "0102030405"
+      contract_address = insert(:contract_address, contract_code: bytecode)
+
+      code = """
+      pragma solidity ^0.4.15;
+      contract Incrementer {
+          event Incremented(address indexed sender, uint256 newValue);
+          uint256 public value;
+          address public lastSender;
+          function Incrementer(uint256 initialValue) {
+              value = initialValue;
+              lastSender = msg.sender;
+          }
+          function inc(uint256 delta) {
+              value = value + delta;
+              lastSender = msg.sender;
+          }
+      }
+      """
 
       params = %{
-        "contract_source_code" => contract_code_info.source_code,
-        "compiler_version" => contract_code_info.version,
-        "name" => contract_code_info.name,
-        "optimization" => contract_code_info.optimized,
-        "constructor_arguments" => constructor_arguments
+        "contract_source_code" => code,
+        "compiler_version" => "v0.4.15+commit.bbb8e64f",
+        "evm_version" => "homestead",
+        "name" => "Incrementer",
+        "optimization" => false
       }
 
-      :transaction
-      |> insert(
-        created_contract_address_hash: contract_address.hash,
-        input: Verifier.extract_bytecode(contract_code_info.bytecode) <> "010203"
-      )
-      |> with_block()
-
-      assert {:error, :constructor_arguments} = Verifier.evaluate_authenticity(contract_address.hash, params)
+      assert {:ok, %{abi: abi}} = Verifier.evaluate_authenticity(contract_address.hash, params)
+      assert abi != nil
     end
 
     test "returns error when bytecode doesn't match", %{contract_code_info: contract_code_info} do
@@ -146,12 +156,28 @@ defmodule Explorer.SmartContract.VerifierTest do
       swarm_source = "3c381c1b48b38d050c54d7ef296ecd411040e19420dfec94772b9c49ae106a0b"
 
       bytecode =
-        "0x608060405234801561001057600080fd5b5060df8061001f6000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806360fe47b114604e5780636d4ce63c146078575b600080fd5b348015605957600080fd5b5060766004803603810190808035906020019092919050505060a0565b005b348015608357600080fd5b50608a60aa565b6040518082815260200191505060405180910390f35b8060008190555050565b600080549050905600a165627a7a72305820"
+        "0x608060405234801561001057600080fd5b5060df8061001f6000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806360fe47b114604e5780636d4ce63c146078575b600080fd5b348015605957600080fd5b5060766004803603810190808035906020019092919050505060a0565b005b348015608357600080fd5b50608a60aa565b6040518082815260200191505060405180910390f35b8060008190555050565b600080549050905600"
 
       assert bytecode == Verifier.extract_bytecode(code)
       assert bytecode != code
       assert String.contains?(code, bytecode) == true
       assert String.contains?(bytecode, "0029") == false
+      assert String.contains?(bytecode, swarm_source) == false
+    end
+
+    test "extracts everything to the left of the swarm hash" do
+      code =
+        "0x608060405234801561001057600080fd5b5060df80610010029f6000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806360fe47b114604e5780636d4ce63c146078575b600080fd5b348015605957600080fd5b5060766004803603810190808035906020019092919050505060a0565b005b348015608357600080fd5b50608a60aa565b6040518082815260200191505060405180910390f35b8060008190555050565b600080549050905600a165627a7a723058203c381c1b48b38d050c54d7ef296ecd411040e19420dfec94772b9c49ae106a0b0029"
+
+      swarm_source = "3c381c1b48b38d050c54d7ef296ecd411040e19420dfec94772b9c49ae106a0b"
+
+      bytecode =
+        "0x608060405234801561001057600080fd5b5060df80610010029f6000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806360fe47b114604e5780636d4ce63c146078575b600080fd5b348015605957600080fd5b5060766004803603810190808035906020019092919050505060a0565b005b348015608357600080fd5b50608a60aa565b6040518082815260200191505060405180910390f35b8060008190555050565b600080549050905600"
+
+      assert bytecode == Verifier.extract_bytecode(code)
+      assert bytecode != code
+      assert String.contains?(code, bytecode) == true
+      assert String.contains?(bytecode, "0029") == true
       assert String.contains?(bytecode, swarm_source) == false
     end
   end

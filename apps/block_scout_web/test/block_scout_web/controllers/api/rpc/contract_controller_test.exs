@@ -1,5 +1,6 @@
 defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
   use BlockScoutWeb.ConnCase
+  alias Explorer.Factory
 
   describe "listcontracts" do
     setup do
@@ -46,10 +47,8 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
                  "Address" => to_string(contract.address_hash),
                  "CompilerVersion" => contract.compiler_version,
                  "ContractName" => contract.name,
-                 "DecompiledSourceCode" => "Contract source code not decompiled.",
                  "DecompilerVersion" => "",
-                 "OptimizationUsed" => if(contract.optimization, do: "1", else: "0"),
-                 "SourceCode" => contract.contract_source_code
+                 "OptimizationUsed" => if(contract.optimization, do: "1", else: "0")
                }
              ]
     end
@@ -71,10 +70,8 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
                  "Address" => to_string(address.hash),
                  "CompilerVersion" => "",
                  "ContractName" => "",
-                 "DecompiledSourceCode" => "Contract source code not decompiled.",
                  "DecompilerVersion" => "",
-                 "OptimizationUsed" => "",
-                 "SourceCode" => ""
+                 "OptimizationUsed" => ""
                }
              ]
     end
@@ -97,10 +94,8 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
                  "Address" => to_string(address.hash),
                  "CompilerVersion" => "",
                  "ContractName" => "",
-                 "DecompiledSourceCode" => "Contract source code not decompiled.",
                  "DecompilerVersion" => "",
-                 "OptimizationUsed" => "",
-                 "SourceCode" => ""
+                 "OptimizationUsed" => ""
                }
              ]
     end
@@ -122,11 +117,9 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
                  "ABI" => Jason.encode!(contract.abi),
                  "Address" => to_string(contract.address_hash),
                  "CompilerVersion" => contract.compiler_version,
-                 "DecompiledSourceCode" => "Contract source code not decompiled.",
                  "DecompilerVersion" => "",
                  "ContractName" => contract.name,
-                 "OptimizationUsed" => if(contract.optimization, do: "1", else: "0"),
-                 "SourceCode" => contract.contract_source_code
+                 "OptimizationUsed" => if(contract.optimization, do: "1", else: "0")
                }
              ]
     end
@@ -149,10 +142,58 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
                  "Address" => to_string(decompiled_smart_contract.address_hash),
                  "CompilerVersion" => "",
                  "ContractName" => "",
-                 "DecompiledSourceCode" => decompiled_smart_contract.decompiled_source_code,
                  "DecompilerVersion" => "test_decompiler",
-                 "OptimizationUsed" => "",
-                 "SourceCode" => ""
+                 "OptimizationUsed" => ""
+               }
+             ]
+    end
+
+    test "filtering for only decompiled contracts, with a decompiled with version filter", %{params: params, conn: conn} do
+      insert(:decompiled_smart_contract, decompiler_version: "foobar")
+      smart_contract = insert(:decompiled_smart_contract, decompiler_version: "bizbuz")
+
+      response =
+        conn
+        |> get("/api", Map.merge(params, %{"filter" => "decompiled", "not_decompiled_with_version" => "foobar"}))
+        |> json_response(200)
+
+      assert response["message"] == "OK"
+      assert response["status"] == "1"
+
+      assert response["result"] == [
+               %{
+                 "ABI" => "Contract source code not verified",
+                 "Address" => to_string(smart_contract.address_hash),
+                 "CompilerVersion" => "",
+                 "ContractName" => "",
+                 "DecompilerVersion" => "bizbuz",
+                 "OptimizationUsed" => ""
+               }
+             ]
+    end
+
+    test "filtering for only decompiled contracts, with a decompiled with version filter, where another decompiled version exists",
+         %{params: params, conn: conn} do
+      non_match = insert(:decompiled_smart_contract, decompiler_version: "foobar")
+      insert(:decompiled_smart_contract, decompiler_version: "bizbuz", address_hash: non_match.address_hash)
+      smart_contract = insert(:decompiled_smart_contract, decompiler_version: "bizbuz")
+
+      response =
+        conn
+        |> get("/api", Map.merge(params, %{"filter" => "decompiled", "not_decompiled_with_version" => "foobar"}))
+        |> json_response(200)
+
+      assert response["message"] == "OK"
+      assert response["status"] == "1"
+
+      assert response["result"] == [
+               %{
+                 "ABI" => "Contract source code not verified",
+                 "Address" => to_string(smart_contract.address_hash),
+                 "CompilerVersion" => "",
+                 "ContractName" => "",
+                 "DecompilerVersion" => "bizbuz",
+                 "OptimizationUsed" => ""
                }
              ]
     end
@@ -176,10 +217,8 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
                  "Address" => to_string(contract_address.hash),
                  "CompilerVersion" => "",
                  "ContractName" => "",
-                 "DecompiledSourceCode" => "Contract source code not decompiled.",
                  "DecompilerVersion" => "",
-                 "OptimizationUsed" => "",
-                 "SourceCode" => ""
+                 "OptimizationUsed" => ""
                }
              ]
     end
@@ -357,6 +396,102 @@ defmodule BlockScoutWeb.API.RPC.ContractControllerTest do
       assert response["result"] == expected_result
       assert response["status"] == "1"
       assert response["message"] == "OK"
+    end
+  end
+
+  describe "verify" do
+    test "with an address that doesn't exist", %{conn: conn} do
+      contract_code_info = Factory.contract_code_info()
+
+      contract_address = insert(:contract_address, contract_code: contract_code_info.bytecode)
+
+      params = %{
+        "module" => "contract",
+        "action" => "verify",
+        "addressHash" => to_string(contract_address.hash),
+        "name" => contract_code_info.name,
+        "compilerVersion" => contract_code_info.version,
+        "optimization" => contract_code_info.optimized,
+        "contractSourceCode" => contract_code_info.source_code
+      }
+
+      response =
+        conn
+        |> get("/api", params)
+        |> json_response(200)
+
+      expected_result = %{
+        "Address" => to_string(contract_address.hash),
+        "SourceCode" => contract_code_info.source_code,
+        "ABI" => Jason.encode!(contract_code_info.abi),
+        "ContractName" => contract_code_info.name,
+        "CompilerVersion" => contract_code_info.version,
+        "DecompiledSourceCode" => "Contract source code not decompiled.",
+        "DecompilerVersion" => "",
+        "OptimizationUsed" => "0"
+      }
+
+      assert response["status"] == "1"
+      assert response["result"] == expected_result
+      assert response["message"] == "OK"
+    end
+
+    test "with external libraries", %{conn: conn} do
+      contract_data =
+        "#{File.cwd!()}/test/support/fixture/smart_contract/compiler_tests.json"
+        |> File.read!()
+        |> Jason.decode!()
+        |> List.first()
+
+      %{
+        "compiler_version" => compiler_version,
+        "external_libraries" => external_libraries,
+        "name" => name,
+        "optimize" => optimize,
+        "contract" => contract_source_code,
+        "expected_bytecode" => expected_bytecode
+      } = contract_data
+
+      contract_address = insert(:contract_address, contract_code: "0x" <> expected_bytecode)
+
+      params = %{
+        "module" => "contract",
+        "action" => "verify",
+        "addressHash" => to_string(contract_address.hash),
+        "name" => name,
+        "compilerVersion" => compiler_version,
+        "optimization" => optimize,
+        "contractSourceCode" => contract_source_code
+      }
+
+      params_with_external_libraries =
+        external_libraries
+        |> Enum.with_index()
+        |> Enum.reduce(params, fn {{name, address}, index}, acc ->
+          name_key = "library#{index + 1}Name"
+          address_key = "library#{index + 1}Address"
+
+          acc
+          |> Map.put(name_key, name)
+          |> Map.put(address_key, address)
+        end)
+
+      response =
+        conn
+        |> get("/api", params_with_external_libraries)
+        |> json_response(200)
+
+      assert response["status"] == "1"
+      assert response["message"] == "OK"
+
+      result = response["result"]
+
+      assert result["Address"] == to_string(contract_address.hash)
+      assert result["SourceCode"] == contract_source_code
+      assert result["ContractName"] == name
+      assert result["DecompiledSourceCode"] == "Contract source code not decompiled."
+      assert result["DecompilerVersion"] == ""
+      assert result["OptimizationUsed"] == "1"
     end
   end
 end
