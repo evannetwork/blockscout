@@ -28,8 +28,8 @@ defmodule Indexer.Block.Catchup.Fetcher do
   # These are all the *default* values for options.
   # DO NOT use them directly in the code.  Get options from `state`.
 
-  @blocks_batch_size 10
-  @blocks_concurrency 10
+  @blocks_batch_size 1
+  @blocks_concurrency 1
   @sequence_name :block_catchup_sequencer
   @geth_block_limit 128
 

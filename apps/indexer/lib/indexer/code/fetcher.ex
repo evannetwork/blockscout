@@ -16,7 +16,7 @@ defmodule Indexer.Code.Fetcher do
   @behaviour BufferedTask
 
   @max_batch_size 10
-  @max_concurrency 4
+  @max_concurrency 1
   @defaults [
     flush_interval: :timer.seconds(3),
     max_concurrency: @max_concurrency,
