@@ -30,61 +30,13 @@ config :block_scout_web,
   },
   other_networks: [
     %{
-      title: "POA Core",
-      url: "https://blockscout.com/poa/core"
+      title: "evan.network core",
+      url: "https://explorer.evan.network"
     },
     %{
-      title: "POA Sokol",
-      url: "https://blockscout.com/poa/sokol",
+      title: "evan.network testcore",
+      url: "https://testexplorer.evan.network",
       test_net?: true
-    },
-    %{
-      title: "xDai Chain",
-      url: "https://blockscout.com/poa/dai"
-    },
-    %{
-      title: "Ethereum Mainnet",
-      url: "https://blockscout.com/eth/mainnet"
-    },
-    %{
-      title: "Kovan Testnet",
-      url: "https://blockscout.com/eth/kovan",
-      test_net?: true
-    },
-    %{
-      title: "Ropsten Testnet",
-      url: "https://blockscout.com/eth/ropsten",
-      test_net?: true
-    },
-    %{
-      title: "Goerli Testnet",
-      url: "https://blockscout.com/eth/goerli",
-      test_net?: true
-    },
-    %{
-      title: "Rinkeby Testnet",
-      url: "https://blockscout.com/eth/rinkeby",
-      test_net?: true
-    },
-    %{
-      title: "Ethereum Classic",
-      url: "https://blockscout.com/etc/mainnet",
-      other?: true
-    },
-    %{
-      title: "Aerum Mainnet",
-      url: "https://blockscout.com/aerum/mainnet",
-      other?: true
-    },
-    %{
-      title: "Callisto Mainnet",
-      url: "https://blockscout.com/callisto/mainnet",
-      other?: true
-    },
-    %{
-      title: "RSK Mainnet",
-      url: "https://blockscout.com/rsk/mainnet",
-      other?: true
     }
   ]
 
