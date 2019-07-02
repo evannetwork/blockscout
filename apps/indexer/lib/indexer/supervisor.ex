@@ -24,6 +24,7 @@ defmodule Indexer.Supervisor do
   }
 
   alias Indexer.Temporary.{
+    BlocksTransactionsMismatch,
     UncatalogedTokenTransfers,
     UnclesWithoutIndex
   }
@@ -71,7 +72,7 @@ defmodule Indexer.Supervisor do
       subscribe_named_arguments: subscribe_named_arguments
     } = named_arguments
 
-    metadata_updater_inverval = Application.get_env(:indexer, :metadata_updater_days_interval)
+    metadata_updater_inverval = Application.get_env(:indexer, :metadata_updater_seconds_interval)
 
     block_fetcher =
       named_arguments
@@ -124,6 +125,8 @@ defmodule Indexer.Supervisor do
         # Temporary workers
         {UncatalogedTokenTransfers.Supervisor, [[]]},
         {UnclesWithoutIndex.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {BlocksTransactionsMismatch.Supervisor,
          [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]}
       ],
       strategy: :one_for_one

@@ -165,7 +165,10 @@ defmodule BlockScoutWeb.AddressDecompiledContractView do
       |> String.replace("\e[1m", "<span style=\"font-weight:bold\">")
       |> String.replace("»", "&raquo;")
       |> String.replace("\e[0m", "</span>")
-      |> String.split(~r/\<span style=.*?\)"\>|\<\/span\>/, include_captures: true, trim: true)
+      |> String.split(~r/\<span style=.*?\)"\>|\<span style=\"font-weight:bold\"\>|\<\/span\>/,
+        include_captures: true,
+        trim: true
+      )
       |> add_styles_to_every_line()
 
     result
@@ -227,10 +230,8 @@ defmodule BlockScoutWeb.AddressDecompiledContractView do
     end)
   end
 
-  def sort_contracts_by_version(decompiled_contracts) do
-    decompiled_contracts
-    |> Enum.sort_by(& &1.decompiler_version)
-    |> Enum.reverse()
+  def last_decompiled_contract_version(decompiled_contracts) do
+    Enum.max_by(decompiled_contracts, & &1.decompiler_version)
   end
 
   defp add_line_numbers(code) do
