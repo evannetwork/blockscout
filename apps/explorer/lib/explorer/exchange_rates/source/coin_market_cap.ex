@@ -17,14 +17,14 @@ defmodule Explorer.ExchangeRates.Source.CoinMarketCap do
 
       %Token{
         available_supply: to_decimal(item["available_supply"]),
-        total_supply: to_decimal(item["total_supply"]),
+        total_supply: to_decimal("0"),
         btc_value: to_decimal(item["price_btc"]),
         id: item["id"],
         last_updated: last_updated,
-        market_cap_usd: to_decimal(item["market_cap_usd"]),
+        market_cap_usd: to_decimal("0"),
         name: item["name"],
         symbol: item["symbol"],
-        usd_value: to_decimal(item["price_usd"]),
+        usd_value: to_decimal("1.00"),
         volume_24h_usd: to_decimal(item["24h_volume_usd"])
       }
     end
