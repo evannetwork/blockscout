@@ -54,11 +54,7 @@ ifdef HAS_BLOCKSCOUT_IMAGE
 	@echo "==> Image exist. Using $(DOCKER_IMAGE)"
 else
 	@echo "==> No image found trying to build one..."
-<<<<<<< HEAD
-	@docker build --no-cache -f ./Dockerfile -t $(DOCKER_IMAGE) ../
-=======
 	@docker build --build-arg COIN="$(COIN)" -f ./Dockerfile -t $(DOCKER_IMAGE) ../
->>>>>>> upstream/master
 endif
 
 migrate: build postgres

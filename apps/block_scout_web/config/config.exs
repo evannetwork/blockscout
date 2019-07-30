@@ -28,17 +28,7 @@ config :block_scout_web,
     "EtherChain" => "https://www.etherchain.org/",
     "Bloxy" => "https://bloxy.info/"
   },
-  other_networks: [
-    %{
-      title: "evan.network core",
-      url: "https://explorer.evan.network"
-    },
-    %{
-      title: "evan.network testcore",
-      url: "https://testexplorer.evan.network",
-      test_net?: true
-    }
-  ]
+  other_networks: System.get_env("SUPPORTED_CHAINS")
 
 config :block_scout_web, BlockScoutWeb.Counters.BlocksIndexedCounter, enabled: true
 
