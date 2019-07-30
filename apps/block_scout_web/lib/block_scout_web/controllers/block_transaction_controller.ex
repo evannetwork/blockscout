@@ -17,7 +17,7 @@ defmodule BlockScoutWeb.BlockTransactionController do
         Keyword.merge(
           [
             necessity_by_association: %{
-              :block => :required,
+              :block => :optional,
               [created_contract_address: :names] => :optional,
               [from_address: :names] => :required,
               [to_address: :names] => :optional
@@ -26,7 +26,7 @@ defmodule BlockScoutWeb.BlockTransactionController do
           paging_options(params)
         )
 
-      transactions_plus_one = Chain.block_to_transactions(block, full_options)
+      transactions_plus_one = Chain.block_to_transactions(block.hash, full_options)
 
       {transactions, next_page} = split_list_by_page(transactions_plus_one)
 
@@ -89,7 +89,7 @@ defmodule BlockScoutWeb.BlockTransactionController do
                :rewards => :optional
              }
            ) do
-      block_transaction_count = Chain.block_to_transaction_count(block)
+      block_transaction_count = Chain.block_to_transaction_count(block.hash)
 
       render(
         conn,
