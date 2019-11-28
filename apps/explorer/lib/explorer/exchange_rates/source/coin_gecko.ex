@@ -26,14 +26,14 @@ defmodule Explorer.ExchangeRates.Source.CoinGecko do
     [
       %Token{
         available_supply: to_decimal(market_data["circulating_supply"]),
-        total_supply: to_decimal(market_data["total_supply"]) || to_decimal(market_data["circulating_supply"]),
+        total_supply: nil,
         btc_value: btc_value,
         id: json_data["id"],
         last_updated: last_updated,
-        market_cap_usd: to_decimal(market_data["market_cap"]["usd"]),
+        market_cap_usd: nil,
         name: json_data["name"],
         symbol: String.upcase(json_data["symbol"]),
-        usd_value: current_price,
+        usd_value: to_decimal("1.00"),
         volume_24h_usd: to_decimal(market_data["total_volume"]["usd"])
       }
     ]
