@@ -51,8 +51,6 @@ export const asyncInitialState = {
   requestError: false,
   /* if response has no items */
   emptyResponse: false,
-  /* if it is loading the first page */
-  loadingFirstPage: true,
   /* link to the next page */
   nextPagePath: null,
   /* link to the previous page */
@@ -80,8 +78,7 @@ export function asyncReducer (state = asyncInitialState, action) {
     }
     case 'FINISH_REQUEST': {
       return Object.assign({}, state, {
-        loading: false,
-        loadingFirstPage: false
+        loading: false
       })
     }
     case 'ITEMS_FETCHED': {
@@ -134,7 +131,7 @@ export const elements = {
   },
   '[data-async-listing] [data-loading-message]': {
     render ($el, state) {
-      if (state.loadingFirstPage) return $el.show()
+      if (state.loading) return $el.show()
 
       $el.hide()
     }
@@ -143,7 +140,7 @@ export const elements = {
     render ($el, state) {
       if (
         !state.requestError &&
-        (!state.loading || !state.loadingFirstPage) &&
+        (!state.loading) &&
         state.items.length === 0
       ) {
         return $el.show()
@@ -201,6 +198,25 @@ export const elements = {
       $el.attr('href', state.prevPagePath)
     }
   },
+  '[data-async-listing] [data-first-page-button]': {
+    render ($el, state) {
+      if (state.pagesStack.length === 0) {
+        return $el.hide()
+      }
+      $el.show()
+      $el.attr('disabled', false)
+
+      const urlParams = new URLSearchParams(window.location.search)
+      const blockParam = urlParams.get('block_type')
+      const firstPageHref = window.location.href.split('?')[0]
+
+      if (blockParam !== null) {
+        $el.attr('href', firstPageHref + '?block_type=' + blockParam)
+      } else {
+        $el.attr('href', firstPageHref)
+      }
+    }
+  },
   '[data-async-listing] [data-page-number]': {
     render ($el, state) {
       if (state.emptyResponse) {
@@ -216,7 +232,7 @@ export const elements = {
   },
   '[data-async-listing] [data-loading-button]': {
     render ($el, state) {
-      if (!state.loadingFirstPage && state.loading) return $el.show()
+      if (state.loading) return $el.show()
 
       $el.hide()
     }
@@ -255,7 +271,7 @@ export function createAsyncLoadStore (reducer, initialState, itemKey) {
     })
   }
 
-  connectElements({store, elements})
+  connectElements({ store, elements })
   firstPageLoad(store)
   return store
 }
@@ -264,20 +280,20 @@ function firstPageLoad (store) {
   const $element = $('[data-async-listing]')
   function loadItemsNext () {
     const path = store.getState().nextPagePath
-    store.dispatch({type: 'START_REQUEST'})
-    $.getJSON(path, {type: 'JSON'})
-      .done(response => store.dispatch(Object.assign({type: 'ITEMS_FETCHED'}, humps.camelizeKeys(response))))
-      .fail(() => store.dispatch({type: 'REQUEST_ERROR'}))
-      .always(() => store.dispatch({type: 'FINISH_REQUEST'}))
+    store.dispatch({ type: 'START_REQUEST' })
+    $.getJSON(path, { type: 'JSON' })
+      .done(response => store.dispatch(Object.assign({ type: 'ITEMS_FETCHED' }, humps.camelizeKeys(response))))
+      .fail(() => store.dispatch({ type: 'REQUEST_ERROR' }))
+      .always(() => store.dispatch({ type: 'FINISH_REQUEST' }))
   }
 
   function loadItemsPrev () {
     const path = store.getState().prevPagePath
-    store.dispatch({type: 'START_REQUEST'})
-    $.getJSON(path, {type: 'JSON'})
-      .done(response => store.dispatch(Object.assign({type: 'ITEMS_FETCHED'}, humps.camelizeKeys(response))))
-      .fail(() => store.dispatch({type: 'REQUEST_ERROR'}))
-      .always(() => store.dispatch({type: 'FINISH_REQUEST'}))
+    store.dispatch({ type: 'START_REQUEST' })
+    $.getJSON(path, { type: 'JSON' })
+      .done(response => store.dispatch(Object.assign({ type: 'ITEMS_FETCHED' }, humps.camelizeKeys(response))))
+      .fail(() => store.dispatch({ type: 'REQUEST_ERROR' }))
+      .always(() => store.dispatch({ type: 'FINISH_REQUEST' }))
   }
   loadItemsNext()
 
@@ -289,14 +305,14 @@ function firstPageLoad (store) {
   $element.on('click', '[data-next-page-button]', (event) => {
     event.preventDefault()
     loadItemsNext()
-    store.dispatch({type: 'NAVIGATE_TO_OLDER'})
+    store.dispatch({ type: 'NAVIGATE_TO_OLDER' })
     event.stopImmediatePropagation()
   })
 
   $element.on('click', '[data-prev-page-button]', (event) => {
     event.preventDefault()
     loadItemsPrev()
-    store.dispatch({type: 'NAVIGATE_TO_NEWER'})
+    store.dispatch({ type: 'NAVIGATE_TO_NEWER' })
     event.stopImmediatePropagation()
   })
 }
@@ -304,6 +320,6 @@ function firstPageLoad (store) {
 const $element = $('[data-async-load]')
 if ($element.length) {
   const store = createStore(asyncReducer)
-  connectElements({store, elements})
+  connectElements({ store, elements })
   firstPageLoad(store)
 }

@@ -6,17 +6,48 @@ defmodule Explorer.EthRPC do
   alias Ecto.Type, as: EctoType
   alias Explorer.{Chain, Repo}
   alias Explorer.Chain.{Block, Data, Hash, Hash.Address, Wei}
+  alias Explorer.Chain.Cache.BlockNumber
   alias Explorer.Etherscan.Logs
 
   @methods %{
+    "eth_blockNumber" => %{
+      action: :eth_block_number,
+      notes: nil,
+      example: """
+      {"id": 0, "jsonrpc": "2.0", "method": "eth_blockNumber", "params": []}
+      """,
+      params: [],
+      result: """
+      {"id": 0, "jsonrpc": "2.0", "result": "0xb3415c"}
+      """
+    },
     "eth_getBalance" => %{
       action: :eth_get_balance,
       notes: """
-      the `earliest` parameter will not work as expected currently, because genesis block balances
+      The `earliest` parameter will not work as expected currently, because genesis block balances
       are not currently imported
       """,
       example: """
-      {"id": 0, "jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000007", "2"]}
+      {"id": 0, "jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x0000000000000000000000000000000000000007", "latest"]}
+      """,
+      params: [
+        %{
+          name: "Data",
+          description: "20 Bytes - address to check for balance",
+          type: "string",
+          default: nil,
+          required: true
+        },
+        %{
+          name: "Quantity|Tag",
+          description: "Integer block number, or the string \"latest\", \"earliest\" or \"pending\"",
+          type: "string",
+          default: "latest",
+          required: true
+        }
+      ],
+      result: """
+      {"id": 0, "jsonrpc": "2.0", "result": "0x0234c8a3397aab58"}
       """
     },
     "eth_getLogs" => %{
@@ -33,6 +64,25 @@ defmodule Explorer.EthRPC do
          "fromBlock": "earliest",
          "toBlock": "latest",
          "topics": ["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"]}]}
+      """,
+      params: [
+        %{name: "Object", description: "The filter options", type: "json", default: nil, required: true}
+      ],
+      result: """
+      {
+        "id":0,
+        "jsonrpc":"2.0",
+        "result": [{
+          "logIndex": "0x1",
+          "blockNumber":"0x1b4",
+          "blockHash": "0x8216c5785ac562ff41e2dcfdf5785ac562ff41e2dcfdf829c5a142f1fccd7d",
+          "transactionHash":  "0xdf829c5a142f1fccd7d8216c5785ac562ff41e2dcfdf5785ac562ff41e2dcf",
+          "transactionIndex": "0x0",
+          "address": "0x16c5785ac562ff41e2dcfdf829c5a142f1fccd7d",
+          "data":"0x0000000000000000000000000000000000000000000000000000000000000000",
+          "topics": ["0x59ebeb90bc63057b6515673c3ecf9438e5058bca0f92585014eced636878c9a5"]
+          }]
+      }
       """
     }
   }
@@ -54,6 +104,16 @@ defmodule Explorer.EthRPC do
         {:request, {:error, message}} -> format_error(message, Map.get(request, "id"))
       end
     end)
+  end
+
+  def eth_block_number do
+    max_block_number = BlockNumber.get_max()
+
+    max_block_number_hex =
+      max_block_number
+      |> encode_quantity()
+
+    {:ok, max_block_number_hex}
   end
 
   def eth_get_balance(address_param, block_param \\ nil) do
@@ -366,6 +426,26 @@ defmodule Explorer.EthRPC do
 
   defp block_param(nil), do: {:ok, :latest}
   defp block_param(_), do: :error
+
+  def encode_quantity(binary) when is_binary(binary) do
+    hex_binary = Base.encode16(binary, case: :lower)
+
+    result = String.replace_leading(hex_binary, "0", "")
+
+    final_result = if result == "", do: "0", else: result
+
+    "0x#{final_result}"
+  end
+
+  def encode_quantity(value) when is_integer(value) do
+    value
+    |> :binary.encode_unsigned()
+    |> encode_quantity()
+  end
+
+  def encode_quantity(value) when is_nil(value) do
+    nil
+  end
 
   def methods, do: @methods
 end

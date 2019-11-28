@@ -1,7 +1,7 @@
 defmodule BlockScoutWeb.AddressContractControllerTest do
   use BlockScoutWeb.ConnCase, async: true
 
-  import BlockScoutWeb.Router.Helpers, only: [address_contract_path: 3]
+  import BlockScoutWeb.WebRouter.Helpers, only: [address_contract_path: 3]
 
   alias Explorer.Chain.Hash
   alias Explorer.ExchangeRates.Token
@@ -49,7 +49,6 @@ defmodule BlockScoutWeb.AddressContractControllerTest do
       assert html_response(conn, 200)
       assert address.hash == conn.assigns.address.hash
       assert %Token{} = conn.assigns.exchange_rate
-      assert conn.assigns.transaction_count
     end
   end
 end

@@ -28,6 +28,12 @@ block_transformer =
       transformer
   end
 
+max_skipping_distance =
+  case Integer.parse(System.get_env("MAX_SKIPPING_DISTANCE", "")) do
+    {num, ""} -> num
+    _ -> 5
+  end
+
 config :indexer,
   block_transformer: block_transformer,
   ecto_repos: [Explorer.Repo],
@@ -35,11 +41,15 @@ config :indexer,
     String.to_integer(System.get_env("TOKEN_METADATA_UPDATE_INTERVAL") || "#{2 * 24 * 60 * 60}"),
   # bytes
   memory_limit: 1 <<< 30,
-  first_block: System.get_env("FIRST_BLOCK") || "0"
+  first_block: System.get_env("FIRST_BLOCK") || "0",
+  last_block: System.get_env("LAST_BLOCK") || "",
+  max_skipping_distance: max_skipping_distance
 
 # config :indexer, Indexer.Fetcher.ReplacedTransaction.Supervisor, disabled?: true
 # config :indexer, Indexer.Fetcher.BlockReward.Supervisor, disabled?: true
 config :indexer, Indexer.Fetcher.StakingPools.Supervisor, disabled?: true
+
+config :indexer, Indexer.Supervisor, enabled: System.get_env("DISABLE_INDEXER") != "true"
 
 config :indexer, Indexer.Tracer,
   service: :indexer,
